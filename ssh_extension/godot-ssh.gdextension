@@ -1,0 +1,20 @@
+[configuration]
+
+entry_symbol = "gdext_rust_init"
+compatibility_minimum = "4.5"
+
+[libraries]
+
+macos.debug = "res://ssh_extension/target/debug/libssh_extension.dylib"
+macos.release = "res://ssh_extension/target/release/libssh_extension.dylib"
+
+linux.x86_64.debug = "res://ssh_extension/target/debug/libssh_extension.so"
+linux.x86_64.release = "res://ssh_extension/target/release/libssh_extension.so"
+
+windows.x86_64.debug = "res://ssh_extension/target/debug/ssh_extension.dll"
+windows.x86_64.release = "res://ssh_extension/target/release/ssh_extension.dll"
+
+[autoload]
+
+Singletons=[  ]
+

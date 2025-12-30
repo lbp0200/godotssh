@@ -1,0 +1,50 @@
+[gd_scene load_steps=3 format=3 uid="uid://cj8lokntf4g0n"]
+
+[ext_resource type="Script" uid="uid://brnr7jbbnr2kb" path="res://main.gd" id="1_ig7tw"]
+[ext_resource type="Theme" uid="uid://bg8jcpua4oohk" path="res://default_theme.tres" id="2_0xm2m"]
+
+[node name="Main" type="Node"]
+script = ExtResource("1_ig7tw")
+
+[node name="UI" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_0xm2m")
+
+[node name="H1" type="LineEdit" parent="UI"]
+layout_mode = 2
+text = "127.0.0.1"
+placeholder_text = "Host (IP/域名)"
+
+[node name="H2" type="LineEdit" parent="UI"]
+layout_mode = 2
+text = "22"
+placeholder_text = "Port"
+
+[node name="H3" type="LineEdit" parent="UI"]
+layout_mode = 2
+text = "lbp"
+placeholder_text = "Username"
+
+[node name="H4" type="LineEdit" parent="UI"]
+layout_mode = 2
+text = "12345"
+placeholder_text = "Password"
+secret = true
+
+[node name="ConnectBtn" type="Button" parent="UI"]
+layout_mode = 2
+text = "连接"
+
+[node name="DisconnectBtn" type="Button" parent="UI"]
+layout_mode = 2
+disabled = true
+text = "断开"
+
+[node name="Output" type="TextEdit" parent="UI"]
+custom_minimum_size = Vector2(0, 300)
+layout_mode = 2
+wrap_mode = 1

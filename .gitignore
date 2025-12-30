@@ -1,0 +1,16 @@
+# Godot
+.godot/
+*.tmp
+*.godot
+*.scn.bak
+*.tscn.bak
+
+# Rust
+ssh_extension/target/
+ssh_extension/Cargo.lock
+**/*.rs.bk
+
+# 编译后的库文件（可选，也可以提交）
+# *.so
+# *.dylib
+# *.dll
