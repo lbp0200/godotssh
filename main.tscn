@@ -1,50 +1,92 @@
-[gd_scene load_steps=3 format=3 uid="uid://cj8lokntf4g0n"]
+[gd_scene load_steps=4 format=3 uid="uid://cj8lokntf4g0n"]
 
 [ext_resource type="Script" uid="uid://brnr7jbbnr2kb" path="res://main.gd" id="1_ig7tw"]
-[ext_resource type="Theme" uid="uid://bg8jcpua4oohk" path="res://default_theme.tres" id="2_0xm2m"]
+[ext_resource type="FontFile" uid="uid://bdwwfs41tnlpq" path="res://NotoSerifSC-Regular.otf" id="2_font"]
 
-[node name="Main" type="Node"]
+[sub_resource type="FontVariation" id="FontVariation_1"]
+base_font = ExtResource("2_font")
+
+[node name="Main" type="Control"]
+layout_mode = 1
 script = ExtResource("1_ig7tw")
+theme_override_colors/background = Color(0.12, 0.12, 0.12, 1)
 
-[node name="UI" type="VBoxContainer" parent="."]
+[node name="TerminalContainer" type="VBoxContainer" parent="."]
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
 grow_horizontal = 2
 grow_vertical = 2
-theme = ExtResource("2_0xm2m")
+theme_override_constants/separation = 0
 
-[node name="H1" type="LineEdit" parent="UI"]
+[node name="TabBar" type="HBoxContainer" parent="TerminalContainer"]
 layout_mode = 2
-text = "127.0.0.1"
-placeholder_text = "Host (IP/域名)"
+theme_override_constants/separation = 5
 
-[node name="H2" type="LineEdit" parent="UI"]
+[node name="TabButton" type="Button" parent="TerminalContainer/TabBar"]
 layout_mode = 2
-text = "22"
-placeholder_text = "Port"
+theme_override_fonts/font = SubResource("FontVariation_1")
+text = "本地终端"
 
-[node name="H3" type="LineEdit" parent="UI"]
+[node name="SSHTabButton" type="Button" parent="TerminalContainer/TabBar"]
 layout_mode = 2
-text = "lbp"
-placeholder_text = "Username"
+theme_override_fonts/font = SubResource("FontVariation_1")
+text = "SSH"
+flat = true
 
-[node name="H4" type="LineEdit" parent="UI"]
+[node name="Spacer" type="Control" parent="TerminalContainer/TabBar"]
 layout_mode = 2
-text = "12345"
-placeholder_text = "Password"
-secret = true
+size_flags_horizontal = 3
 
-[node name="ConnectBtn" type="Button" parent="UI"]
+[node name="ConnectionInfo" type="Label" parent="TerminalContainer/TabBar"]
 layout_mode = 2
-text = "连接"
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_fonts/font = SubResource("FontVariation_1")
+theme_override_font_sizes/font_size = 12
+text = "本地"
 
-[node name="DisconnectBtn" type="Button" parent="UI"]
+[node name="HSeparator" type="HSeparator" parent="TerminalContainer"]
 layout_mode = 2
-disabled = true
-text = "断开"
 
-[node name="Output" type="TextEdit" parent="UI"]
-custom_minimum_size = Vector2(0, 300)
+[node name="TerminalOutput" type="TextEdit" parent="TerminalContainer"]
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_colors/background = Color(0.08, 0.08, 0.08, 1)
+theme_override_colors/font_selected_color = Color(0.1, 0.1, 0.1, 1)
+theme_override_colors/selection_color = Color(0.2, 0.4, 0.8, 1)
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_fonts/font = SubResource("FontVariation_1")
+theme_override_font_sizes/font_size = 14
+context_menu_enabled = false
+editable = true
+shortcut_keys_enabled = true
 wrap_mode = 1
+
+[node name="StatusBar" type="HBoxContainer" parent="TerminalContainer"]
+custom_minimum_size = Vector2(0, 25)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="StatusLeft" type="Label" parent="TerminalContainer/StatusBar"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_fonts/font = SubResource("FontVariation_1")
+theme_override_font_sizes/font_size = 11
+text = "本地终端"
+
+[node name="Spacer2" type="Control" parent="TerminalContainer/StatusBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StatusRight" type="Label" parent="TerminalContainer/StatusBar"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_fonts/font = SubResource("FontVariation_1")
+theme_override_font_sizes/font_size = 11
+text = "UTF-8"
