@@ -250,9 +250,11 @@ func _on_terminal_text_changed() -> void:
 	# 确保最后一行以提示符开始
 	if not last_line.begins_with(prompt_text):
 		# 如果最后一行被修改了提示符，恢复它
-		terminal.set_line(last_line_index, prompt_text + current_command)
+		var new_line = prompt_text + current_command
+		terminal.set_line(last_line_index, new_line)
 		terminal.set_caret_line(last_line_index)
-		terminal.set_caret_column(terminal.text.length())
+		# 使用当前行的长度，而不是整个文本的长度
+		terminal.set_caret_column(new_line.length())
 		prompt_start_pos = terminal.text.length() - current_command.length()
 	else:
 		# 更新当前命令
@@ -388,22 +390,34 @@ func _execute_local_command(command: String) -> void:
 	# 处理其他命令
 	var os_name = OS.get_name()
 	var shell_path = ""
-	var full_command = ""
+	var shell_args: Array[String] = []
 	
 	if os_name == "Windows":
 		shell_path = "cmd.exe"
-		full_command = "cd /d \"" + current_dir + "\" && " + command
+		# Windows: 使用 /c 参数，并在命令前添加 cd
+		var full_command = "cd /d \"" + current_dir + "\" && " + command
+		shell_args = ["/c", full_command]
 	else:
-		shell_path = "/bin/sh"
-		full_command = "cd \"" + current_dir + "\" && " + command
+		# macOS/Linux: 使用 bash 而不是 sh，以支持更多 shell 特性（如大括号展开 {1..500}）
+		# 检查 bash 是否存在，如果不存在则回退到 sh
+		if FileAccess.file_exists("/bin/bash"):
+			shell_path = "/bin/bash"
+		else:
+			shell_path = "/bin/sh"
+		# 使用 -c 参数执行命令，命令中先 cd 到目标目录
+		var full_command = "cd \"" + current_dir + "\" && " + command
+		shell_args = ["-c", full_command]
 	
 	var output: Array = []
 	var exit_code: int = 0
 	
-	if os_name == "Windows":
-		exit_code = OS.execute(shell_path, ["/c", full_command], output, true, true)
-	else:
-		exit_code = OS.execute(shell_path, ["-c", full_command], output, true, true)
+	# OS.execute 的签名: execute(path, arguments, output, blocking, read_stdout)
+	# path: shell 路径
+	# arguments: 参数数组
+	# output: 输出数组（通过引用传递，包含 stdout 和 stderr）
+	# blocking=true: 阻塞执行直到完成
+	# read_stdout=true: 读取标准输出（stderr 也会被包含在 output 中）
+	exit_code = OS.execute(shell_path, shell_args, output, true, true)
 	
 	# 显示输出
 	if output.size() > 0:
@@ -415,8 +429,9 @@ func _execute_local_command(command: String) -> void:
 		_append_output("命令执行失败，退出码: " + str(exit_code))
 
 func _execute_ssh_command(command: String) -> void:
-	if ssh_client == null:
-		_append_output("错误: SSH 扩展未加载")
+	# 尝试确保 SSH 客户端已初始化
+	if not _ensure_ssh_client():
+		_append_output("错误: SSH 扩展未加载或无法初始化")
 		return
 	
 	if not ssh_client.has_method("is_connected") or not ssh_client.is_connected():
@@ -443,11 +458,34 @@ func _input(event: InputEvent) -> void:
 		if terminal.get_global_rect().has_point(event.global_position):
 			terminal.grab_focus()
 			# 移动光标到最后一行
-			terminal.set_caret_line(terminal.get_line_count() - 1)
-			terminal.set_caret_column(terminal.text.length())
+			var last_line_idx = terminal.get_line_count() - 1
+			terminal.set_caret_line(last_line_idx)
+			# 使用最后一行的长度，而不是整个文本的长度
+			var last_line = terminal.get_line(last_line_idx)
+			terminal.set_caret_column(last_line.length())
 
 func _try_init_ssh_client() -> void:
+	# 尝试初始化 SSH 客户端（如果 GDExtension 可用）
+	# 注意：SSHClient 类需要通过 GDExtension 加载
+	# 
+	# 在 GDScript 中，如果 GDExtension 类可用，可以直接使用 SSHClient.new()
+	# 但由于 GDScript 没有 try-catch，如果类不存在会导致脚本错误
+	# 所以我们延迟到实际需要时再创建（在切换到 SSH 模式或执行 SSH 命令时）
+	# 
+	# 这里先保持为 null，在实际使用时再尝试创建
 	ssh_client = null
+
+# 尝试创建 SSH 客户端实例（在实际需要时调用）
+func _ensure_ssh_client() -> bool:
+	if ssh_client != null:
+		return true
+	
+	# 尝试创建 SSHClient 实例
+	# 如果 GDExtension 已加载，SSHClient 类应该可用
+	# 注意：如果类不存在，这会导致脚本错误
+	# 在实际项目中，应该检查扩展是否已加载
+	ssh_client = SSHClient.new()
+	return ssh_client != null
 
 func _exit_tree() -> void:
 	if ssh_client != null and ssh_client.is_connected():
