@@ -404,9 +404,28 @@ func _execute_local_command(command: String) -> void:
 			shell_path = "/bin/bash"
 		else:
 			shell_path = "/bin/sh"
-		# 使用 -c 参数执行命令，命令中先 cd 到目标目录
-		var full_command = "cd \"" + current_dir + "\" && " + command
-		shell_args = ["-c", full_command]
+		
+		# 使用临时脚本文件来执行命令，避免引号转义问题
+		# 这是最安全的方法，可以处理任何复杂的命令（包含引号、变量、特殊字符等）
+		var temp_script = OS.get_cache_dir() + "/godot_terminal_script_" + str(Time.get_ticks_msec()) + ".sh"
+		var file = FileAccess.open(temp_script, FileAccess.WRITE)
+		if file:
+			# 写入脚本：先 cd 到目录，然后执行命令
+			file.store_string("cd '" + current_dir.replace("'", "'\\''") + "'\n")
+			file.store_string(command + "\n")
+			file.close()
+			
+			# 给脚本添加执行权限
+			OS.execute("/bin/chmod", ["+x", temp_script], [], false)
+			
+			# 执行脚本
+			shell_args = [temp_script]
+		else:
+			# 如果无法创建临时文件，回退到原来的方法（转义引号）
+			var escaped_dir = current_dir.replace("'", "'\\''")
+			var escaped_command = command.replace("'", "'\\''")
+			var full_command = "cd '" + escaped_dir + "' && " + escaped_command
+			shell_args = ["-c", full_command]
 	
 	var output: Array = []
 	var exit_code: int = 0
@@ -418,6 +437,14 @@ func _execute_local_command(command: String) -> void:
 	# blocking=true: 阻塞执行直到完成
 	# read_stdout=true: 读取标准输出（stderr 也会被包含在 output 中）
 	exit_code = OS.execute(shell_path, shell_args, output, true, true)
+	
+	# 清理临时脚本文件（如果使用了）
+	if os_name != "Windows" and shell_args.size() > 0:
+		var temp_script = shell_args[0]
+		if temp_script.begins_with(OS.get_cache_dir()):
+			var dir = DirAccess.open(OS.get_cache_dir())
+			if dir:
+				dir.remove(temp_script.get_file())
 	
 	# 显示输出
 	if output.size() > 0:
